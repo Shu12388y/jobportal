@@ -1,135 +1,106 @@
-# Turborepo starter
+# JobPost
 
-This Turborepo starter is maintained by the Turborepo core team.
+JobPost is a monorepo for a job discovery platform with a Next.js web app and an Express API backed by MongoDB.
 
-## Using this example
+## Apps and Packages
 
-Run the following command:
+- `apps/web`: Next.js app (App Router)
+- `apps/apis`: Express API server (TypeScript, MongoDB)
+- `packages/ui`: shared UI primitives
+- `packages/eslint-config`: shared ESLint configs
+- `packages/typescript-config`: shared TS configs
 
-```sh
-npx create-turbo@latest
+## Requirements
+
+- Node.js >= 18
+- pnpm >= 9
+- MongoDB connection string
+
+## Quick Start
+
+1) Install dependencies
+
+```bash
+pnpm install
 ```
 
-## What's inside?
+2) Configure environment variables
 
-This Turborepo includes the following packages/apps:
+Create `apps/apis/.env`:
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+DB=mongodb+srv://<user>:<password>@<cluster>/<db>
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+3) Start dev servers
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+pnpm dev
 ```
 
-### Develop
+The web app runs on `http://localhost:3000` and the API on `http://localhost:4000`.
 
-To develop all apps and packages, run the following command:
+## Scripts
 
-```
-cd my-turborepo
+- `pnpm dev`: run all apps in dev mode with Turborepo
+- `pnpm build`: build all packages
+- `pnpm lint`: lint all packages
+- `pnpm check-types`: typecheck all packages
+- `pnpm format`: format `ts`, `tsx`, `md`
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+You can scope commands to a single app:
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+pnpm --filter web dev
+pnpm --filter apis build
 ```
 
-### Remote Caching
+## API Overview
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+Base URL: `http://localhost:4000`
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+- `GET /health`: health check
+- `POST /v1/auth/*`: authentication endpoints
+- `/v1/listing/*`: job listing endpoints
+- `/v1/feed/*`: insights endpoints
+- `/v1/recommendation/*`: recommendations endpoints
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## High-Level Design (HLD)
+
+### Components
+
+- **Web App**: Next.js UI for browsing jobs, insights, and profile pages.
+- **API**: Express REST API exposing domain modules for auth, job listings, insights, and recommendations.
+- **Database**: MongoDB for persistence via Mongoose models.
+
+### Data Flow
+
+1) The web app calls REST endpoints on the API server.
+2) The API validates requests, runs module logic, and queries MongoDB.
+3) The API returns JSON payloads to the web app for rendering.
+
+### Architecture Diagram
+
+```mermaid
+flowchart LR
+	U[User] --> W[Next.js Web App]
+	W --> A[Express API]
+	A --> M[(MongoDB)]
+
+	A --> Auth[Auth Module]
+	A --> Jobs[Job Listing Module]
+	A --> Insights[Insights Module]
+	A --> Recs[Recommendation Module]
+```
+
+## Project Structure
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+apps/
+	apis/            # Express API
+	web/             # Next.js web app
+packages/
+	ui/              # Shared UI components
+	eslint-config/   # ESLint presets
+	typescript-config/ # TS presets
 ```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
